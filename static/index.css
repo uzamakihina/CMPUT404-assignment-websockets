@@ -1,0 +1,24 @@
+body{
+    
+  
+    
+    /* background-position: center; */
+    /* background-repeat: no-repeat;
+    background-size: cover; */
+
+    
+    
+}
+
+
+html{
+    background-image: url('canvas.jpg'); 
+    background-repeat: no-repeat;
+    background-size:cover;
+
+    background-position: middle;
+
+    width:600pt;
+    height:500pt;
+    
+}

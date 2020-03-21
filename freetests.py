@@ -40,9 +40,10 @@ import json
 
 world = dict()
 # set this to something sane 
-calls = 3000
+#calls = 3000
 # ugh there's too much output? Well drop calls down
-# calls = 100
+calls = 100
+
 
 def utf8(utf8bytes):
     return utf8bytes.decode("utf-8")
@@ -59,13 +60,13 @@ class WorldClient(WebSocketClient):
         world[entity] = data
         packet = { entity : data }
         self.send(json.dumps(packet))
-        print("Sent %s" % entity)
+        #print("Sent %s" % entity)
 
     def closed(self, code, reason):
         print(("Closed down %s " % self.name, code, reason))
 
     def receive_my_message(self,m):
-        print("RECV %s " % m)
+        #print("RECV %s " % m)
         w = json.loads(utf8(m.data))
         kcnt = 0
         for key in w:
@@ -81,7 +82,7 @@ class WorldClient(WebSocketClient):
     def incoming(self):
         while self.count < calls:
             m = self.receive()
-            print("Incoming RECV %s %s " % (self.name,m))
+            #print("Incoming RECV %s %s " % (self.name,m))
             if m is not None:
                 self.receive_my_message( m )
             else:

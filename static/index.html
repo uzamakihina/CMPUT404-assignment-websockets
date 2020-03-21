@@ -1,12 +1,12 @@
 <!DOCTYPE HTML>
 <html> 
   <head> 
-    <title>Websockets Assignment</title> 
+    <title>AJAX Assignment</title> 
     <meta charset="utf-8" /> 
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
-    <meta name="license" content="
-        Copyright 2013 Google, Abram Hindle
+    <meta name="license" content='
+        Copyright 2013 Abram Hindle
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -19,43 +19,79 @@
         WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
         See the License for the specific language governing permissions and
         limitations under the License.
-    "/>
+    ' />
     <script src="json2.js"></script>
   </head> 
-  <body bgcolor="white" height="100%" width="100%"> 
-    <div id="debug"></div>
-    <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
-
+  <link rel="stylesheet" type="text/css" href="index.css">
+  <body> 
+    <!-- width="100%" height="100%"  -->
+    <canvas id="c" style="-webkit-tap-highlight-color: transparent;"></canvas> 
+    
     <script>
-      // Fix me
+
+        
+world = {};
+const me = ""
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
-var W = canvas.width  = window.innerWidth-6;
-var H = canvas.height = window.innerHeight-50;
-var wscounter = 0;
-var socket;
+var W = canvas.width  = 720;
+var H = canvas.height = 675;
 
-function debug(str) {
-    var debugDiv = document.getElementById('debug');
-    debugDiv.innerHTML = "" + str;
+
+function sendJSONXMLHTTPRequest(url, objects, callback) {
+
+
+    var xhr = new XMLHttpRequest();
+  
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function (e) {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        if (callback != null){
+            world = data
+            callback()
+        }
+
+    } 
+};
+xhr.send(JSON.stringify(objects));
+   
+
+    
 }
-debug("Test");
 
-world = {};
+
+
+
 
 //XXX: TODO Make this prettier!
-function drawCircle(context,entity) {
+function drawCircle(context,entity,index) {
     with(context) {
-        beginPath();                
-        lineWidth = 3;
+        beginPath();  
+        lineCap ="round"
+        lineWidth = 1;
         var x = entity["x"];
         var y = entity["y"];
-        //moveTo(x,y);
+
+        
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        shadowOffsetX = 3
+        shadowOffsetY = 3
+        shadowBlur = 15
+        shadowColor ="#00CCFF"
+        
+        arc(x, y, (entity["radius"])?entity["radius"]:10, 0, 2.0 * Math.PI, true); 
+       
+        context.fill()
+        stroke();    
+
+        beginPath()
+      
+
+                   
     }
 }
 
@@ -63,31 +99,38 @@ function prepEntity(entity) {
     if (!entity["colour"]) {
         entity["colour"] = "#FF0000";
     }
-    if (!entity["radius"]) {
-        entity["radius"] = 50;
-    }
+    
     return entity;
 }
 
 function clearFrame() {
     with(context) {
 	moveTo(0,0);
-	fillStyle = "#000";
-	fillRect(0,0,W,H);
+	// fillStyle = "#000";
+    context.clearRect(0, 0, canvas.width, canvas.height);
+	// fillRect(0,0,W,H);
     }
 
 }
 
 // This actually draws the frame
+
+number = 1
 function renderFrame() {
     clearFrame();
+
+    
     for (var key in world) {
         var entity = world[key];
-        drawCircle(context,prepEntity(entity));
+        
+       
+        
+        drawCircle(context,prepEntity(entity),(number+1)%2);
     }
 }
 
 var drawNext = true;
+
 // Signals that there's something to be drawn
 function drawNextFrame() {
     drawNext = true;
@@ -121,15 +164,44 @@ function getPosition(e) {
 	}
 }
 
-function addEntity(entity, data) {
-    world[entity] = data;
-    drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just modified!
+add = false
+to_add ={}
+function addEntity(data) {
+   
+
+    // var addr = window.location.host + "/entity/"+name
+
+    to_add = data
+    add = true
+
+    
+    
+    
+    // alert(window.origin)
+//     fetch(`${window.origin}/entity/${name}`, {
+//     method: "POST",
+//     body: JSON.stringify(data),
+//     headers: new Headers({
+//       "content-type": "application/json"
+//     })
+//   }).catch(function(error) {
+//     alert("Fetch error: " + error);
+// });
+
+// drawNextFrame();
+
+    //XXX: Send a XHTML Request that updates the entity you just  modified!
+
 }
+
 var counter = 0;
 function addEntityWithoutName(data) {
-    var name = "X"+(counter++)%100;
-    addEntity(name,data);
+    //var name = "X"+Math.floor((Math.random()*100)+1);
+
+   
+    
+    addEntity(data);
+    
 }
 
 // canvas + mouse/touch is complicated 
@@ -156,7 +228,7 @@ mouse = (function() {
             var pos = getPosition(e);
             var x = pos[0];
             var y = pos[1];
-            if (x >= 0 && x <= W && y >= 0 && y <= H) {
+            if (x >= 65 && x <= W && y >= 55 && y <= H) {
                 return 1;
             } else {
                 return 0;
@@ -212,8 +284,7 @@ mouse = (function() {
             self.lasttouch = e;                                         
             return self.mousemove(e);
 	},
-		                                   
-        // Install the mouse listeners
+	// Install the mouse listeners
 	mouseinstall: function() {
             canvas.addEventListener("mousedown",  self.mousedown, false);
             canvas.addEventListener("mousemove",  self.mousemove, false);
@@ -224,6 +295,7 @@ mouse = (function() {
             canvas.addEventListener("touchend",   self.touchend, false);
 	}
     };
+    // Force install!
     self.mouseinstall();
     return self;
 })();
@@ -231,50 +303,74 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'blue','radius':10});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
-});
+    addEntityWithoutName({'x':x,'y':y,'colour':'blue',radius:10});
 
+    
+    // alert(JSON.stringify(world))
+});
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    addEntityWithoutName({'x':x,'y':y,'colour':'#87CEEB',
                           'radius':10});
 });
 
 
+var socket
+window.onload = function(){
+    var url = "ws://"+window.location.host+"/subscribe"
+    socket = new WebSocket(url)
+    socket.onopen = function(){}
+    socket.send(JSON.stringify({}))
+
+}
+counter = 0
+
 function update() {
-    drawFrame();
+
+    if(add){
+    var entity = "X " + counter.toString()
+    counter = (counter+1)%3000
+    var data = {}
+    data[entity] = to_add
+
+    socket.send(JSON.stringify(data))
+    socket.onmessage = function(msg){
+
+        world = JSON.parse(msg.data)
+        renderFrame()
+    }
+    add= false
+    }
+
+ 
+    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
+
+    // if (add){
+    // var name = "X"+(counter++)%200;
+    // sendJSONXMLHTTPRequest("/entity/" + name, to_add, null)
+    // add = false
+    // }
+    
+
+    // sendJSONXMLHTTPRequest("/world", {}, renderFrame)
+
+
+
+    
+    
+   
+    
 }
-
-
-function wsSetup() {
-    var url = "ws://"+host+"/subscribe";   
-    socket = new WebSocket(url);
-    socket.onopen = function() {
-        //XXX: TODO What are you going to do here?
-    };
-    socket.onerror = function(msg) {
-        debug("WebSocket Error:" + msg.data);
-    };
-    socket.onmessage = function(msg) {  
-        try {
-            debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
-        } catch (e) {
-            alert("socket on message: " + e);
-        }
-    }; 
-}
-
-wsSetup();
-
 
 
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
+
+setInterval( update, 1000/25);
+
 
 
     </script>
