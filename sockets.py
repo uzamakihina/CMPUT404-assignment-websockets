@@ -71,16 +71,16 @@ myWorld = World()
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
 # this should come with flask but whatever, it's not my project.
-def flask_post_json():
-    '''Ah the joys of frameworks! They do so much work for you
-       that they get in the way of sane operation!'''
-    if (request.json != None):
-        return request.json
-    elif (request.data != None and request.data.decode("utf8") != u''):
+# def flask_post_json():
+#     '''Ah the joys of frameworks! They do so much work for you
+#        that they get in the way of sane operation!'''
+#     if (request.json != None):
+#         return request.json
+#     elif (request.data != None and request.data.decode("utf8") != u''):
 
-        return json.loads(request.data.decode("utf8"))
-    else:
-        return json.loads(request.form.keys()[0])
+#         return json.loads(request.data.decode("utf8"))
+#     else:
+#         return json.loads(request.form.keys()[0])
 
 @app.route("/")
 def hello():
@@ -89,64 +89,64 @@ def hello():
     
     return redirect("/static/index.html", code=301)
 
-@app.route("/entity/<entity>", methods=['POST','PUT'])
-def update(entity):
-    '''update the entities via this interface'''
+# @app.route("/entity/<entity>", methods=['POST','PUT'])
+# def update(entity):
+#     '''update the entities via this interface'''
     
-    # string = request.data.decode('utf-8')
-    # resp = json.loads(string)
-    # myWorld.set(entity, resp)
-    # res = make_response(resp, 200)
+#     # string = request.data.decode('utf-8')
+#     # resp = json.loads(string)
+#     # myWorld.set(entity, resp)
+#     # res = make_response(resp, 200)
 
-    string = request.data.decode('utf-8')
-    resp = json.loads(string)
+#     string = request.data.decode('utf-8')
+#     resp = json.loads(string)
     
-    myWorld.set(entity, resp)
+#     myWorld.set(entity, resp)
     
-    res = make_response(string ,200)
+#     res = make_response(string ,200)
    
     
-    return res
+#     return res
 
-@app.route("/world", methods=['POST','GET'])    
-def world():
-    '''you should probably return the world here'''
+# @app.route("/world", methods=['POST','GET'])    
+# def world():
+#     '''you should probably return the world here'''
 
-    res = make_response(json.dumps(myWorld.space), 200)
+#     res = make_response(json.dumps(myWorld.space), 200)
     
    
-    return res
+#     return res
 
-people = []
+# people = []
 
-@app.route("/entity/<entity>")    
-def get_entity(entity, method=['GET']):
-    '''This is the GET version of the entity interface, return a representation of the entity'''
+# @app.route("/entity/<entity>")    
+# def get_entity(entity, method=['GET']):
+#     '''This is the GET version of the entity interface, return a representation of the entity'''
     
-    temp = myWorld.get(entity)
+#     temp = myWorld.get(entity)
    
-    res = make_response(json.dumps(temp), 200)
+#     res = make_response(json.dumps(temp), 200)
 
     
 
-    return res
+#     return res
 
-@app.route("/clear", methods=['POST','GET'])
-def clear():
-    '''Clear the world out!'''
-    myWorld.space = {}
-    res = make_response(json.dumps(myWorld.space), 200)
-    return res
+# @app.route("/clear", methods=['POST','GET'])
+# def clear():
+#     '''Clear the world out!'''
+#     myWorld.space = {}
+#     res = make_response(json.dumps(myWorld.space), 200)
+#     return res
 
 
 Painters = []
 
 
 
-def sendout():
+def sendout(msg):
     
     for i in Painters:
-        i.update()
+        i.update(msg)
         
         
     
@@ -157,18 +157,15 @@ def paint(ws,painter):
         while True:
             
             
-            msg = json.loads(ws.receive())
-            for key,val in msg.items():
-                myWorld.space[key] = val
-            
-                
-            sendout()
+            msg = ws.receive()
+  
+            sendout(msg)
 
             if msg == None:
                 break
 
     except Exception as e:
-        print(e)
+        print("Finished painting")
 
 class Painter:
     def __init__(self):
@@ -176,8 +173,8 @@ class Painter:
 
     def draw(self,data):
         pass
-    def update(self):
-        self.queue.put(json.dumps(myWorld.space))
+    def update(self,msg):
+        self.queue.put(msg)
        
         
     def get(self):
@@ -191,9 +188,16 @@ def subscribe_socket(ws):
     Painters.append(painter)
     
     thread = gevent.spawn(paint,ws,painter)
-    while True:
-        msg = painter.get()
-        ws.send(msg)
+    try:
+        while True:
+            msg = painter.get()
+            print(msg)
+            ws.send(msg)
+    except:
+        pass
+    finally:
+        Painters.remove(painter)
+        gevent.kill(thread)
    
             
 
