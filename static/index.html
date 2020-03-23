@@ -323,6 +323,22 @@ window.onload = function(){
     var url = "ws://"+window.location.host+"/subscribe"
     socket = new WebSocket(url)
     socket.onopen = function(){}
+    socket.onmessage = function(msg){
+
+        var data = JSON.parse(msg.data)
+
+        console.log(msg.data)
+        for (key in data){
+            
+        world[key] = data[key]
+}
+    
+
+    
+ renderFrame()
+}
+
+   
   
 
 }
@@ -337,19 +353,7 @@ function update() {
     data[entity] = to_add
 
     socket.send(JSON.stringify(data))
-    socket.onmessage = function(msg){
-
-       var data = JSON.parse(msg.data)
-       
-      
-       for (key in data){
-            
-           world[key] = data[key]
-       }
-       
-           
-        renderFrame()
-    }
+    
     add= false
     }
 

@@ -64,23 +64,10 @@ class World:
     def world(self):
         return self.space
 
-# you can test your webservice from the commandline
-# curl -v   -H "Content-Type: application/json" -X PUT http://127.0.0.1:5000/entity/X -d '{"x":1,"y":1}' 
 
 myWorld = World()          
 
-# I give this to you, this is how you get the raw body/data portion of a post in flask
-# this should come with flask but whatever, it's not my project.
-# def flask_post_json():
-#     '''Ah the joys of frameworks! They do so much work for you
-#        that they get in the way of sane operation!'''
-#     if (request.json != None):
-#         return request.json
-#     elif (request.data != None and request.data.decode("utf8") != u''):
 
-#         return json.loads(request.data.decode("utf8"))
-#     else:
-#         return json.loads(request.form.keys()[0])
 
 @app.route("/")
 def hello():
@@ -89,67 +76,15 @@ def hello():
     
     return redirect("/static/index.html", code=301)
 
-# @app.route("/entity/<entity>", methods=['POST','PUT'])
-# def update(entity):
-#     '''update the entities via this interface'''
-    
-#     # string = request.data.decode('utf-8')
-#     # resp = json.loads(string)
-#     # myWorld.set(entity, resp)
-#     # res = make_response(resp, 200)
-
-#     string = request.data.decode('utf-8')
-#     resp = json.loads(string)
-    
-#     myWorld.set(entity, resp)
-    
-#     res = make_response(string ,200)
-   
-    
-#     return res
-
-# @app.route("/world", methods=['POST','GET'])    
-# def world():
-#     '''you should probably return the world here'''
-
-#     res = make_response(json.dumps(myWorld.space), 200)
-    
-   
-#     return res
-
-# people = []
-
-# @app.route("/entity/<entity>")    
-# def get_entity(entity, method=['GET']):
-#     '''This is the GET version of the entity interface, return a representation of the entity'''
-    
-#     temp = myWorld.get(entity)
-   
-#     res = make_response(json.dumps(temp), 200)
-
-    
-
-#     return res
-
-# @app.route("/clear", methods=['POST','GET'])
-# def clear():
-#     '''Clear the world out!'''
-#     myWorld.space = {}
-#     res = make_response(json.dumps(myWorld.space), 200)
-#     return res
 
 
 Painters = []
-
-
 
 def sendout(msg):
     
     for i in Painters:
         i.update(msg)
         
-        
-    
 
 def paint(ws,painter):
     
@@ -158,7 +93,12 @@ def paint(ws,painter):
             
             
             msg = ws.receive()
-  
+            diction = json.loads(msg)
+            for key in diction:
+                myWorld.space[key] = diction[key]
+            
+
+            
             sendout(msg)
 
             if msg == None:
@@ -187,6 +127,7 @@ def subscribe_socket(ws):
     painter = Painter()
     Painters.append(painter)
     
+    ws.send(json.dumps(myWorld.space))
     thread = gevent.spawn(paint,ws,painter)
     try:
         while True:
